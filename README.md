@@ -2,14 +2,14 @@
 
 Kairu SMP is a cinematic Minecraft community website and player portal built with **TanStack Start, React 19, TypeScript, and Tailwind CSS**. The interface uses a dark cyberpunk visual system with restrained purple, magenta, and electric-blue lighting, custom voxel artwork, glass panels, neon edge treatments, and reduced-motion support.
 
-The project is frontend-complete and runs against realistic local mock data by default. It can connect to a Railway-hosted API by setting one environment variable; no page components need to be rewritten.
+The project is production-connected to the Railway control plane and includes server-side Discord OAuth sign-up/sign-in. Public content can still use local mock data during development, but private portal access is validated by a revocable server-side session.
 
 ## Experience Map
 
 | Area              | Routes                                                                                                                                               | Included capabilities                                                                                                                                                                                                                                             |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public website    | `/`, `/play`, `/worlds`, `/live`, `/events`, `/leaderboards`, `/membership`, `/community`                                                            | Cinematic landing page, copyable Java and Bedrock addresses, server telemetry, visual world browser, creator discovery, platform and status filters, event registration feedback, sortable leaderboards, membership comparison, and creator programme information |
-| Authentication    | `/login`                                                                                                                                             | Frontend demonstration sign-in with persistent local session state and protected portal routing                                                                                                                                                                   |
+| Authentication    | `/login`, `/auth/discord`, `/auth/discord/callback`                                                                                                   | Discord authorization-code sign-up/sign-in with PKCE, one-use state and tickets, host-only secure cookies, CSRF-protected logout, and protected portal routing                                                                                                     |
 | Player portal     | `/portal`, `/portal/profile`, `/portal/stats`, `/portal/discord`, `/portal/achievements`, `/portal/events`, `/portal/membership`, `/portal/settings` | Player KPIs, linked-account states, Minecraft statistics, achievements, event sign-ups, Discord identity, membership management, preferences, and responsive dashboard navigation                                                                                 |
 | Shared foundation | `src/config`, `src/data`, `src/services`, `src/components/site`                                                                                      | Central branding, typed mock data, Railway-ready API service boundary, reusable visual primitives, global navigation, footer, and interaction components                                                                                                          |
 
@@ -28,7 +28,21 @@ The development server binds to `0.0.0.0:3000`. Create a production build with:
 pnpm build
 ```
 
-The demonstration login accepts any non-empty username. The password field is present for production parity but is not validated by the frontend-only session stub. Replace `src/lib/auth.tsx` when the production authentication contract is available.
+The primary account action is **Continue with Discord**. The legacy demonstration login is available only outside production for isolated UI development and is never accepted as a production identity.
+
+## Discord OAuth
+
+The website keeps its session in a same-origin `__Host-kairu_session` cookie with `HttpOnly`, `Secure`, and `SameSite=Lax`. Discord provider tokens, the OAuth client secret, database credentials, API secrets, and session material never enter browser JavaScript or browser storage. The control plane owns platform users, Discord identities, OAuth states, login tickets, sessions, and revocation.
+
+Configure the website server with `API_URL`, `WEBSITE_URL`, `WEBSITE_API_SECRET`, `SESSION_SECRET`, `DISCORD_OAUTH_CLIENT_ID`, and `DISCORD_OAUTH_REDIRECT_URI`. Configure the same public identifiers and matching website/session secrets on the control plane, plus `DISCORD_OAUTH_CLIENT_SECRET`. None of these server-only variables may use a `VITE_` prefix. After both services are configured and the callback is registered, set the non-secret build flag `VITE_DISCORD_AUTH_ENABLED=true`; until then the CTA remains visible but safely disabled.
+
+The exact redirect URI is:
+
+```text
+https://YOUR-WEBSITE-DOMAIN/auth/discord/callback
+```
+
+See [`docs/DISCORD_OAUTH.md`](docs/DISCORD_OAUTH.md) for the full security model, Railway variables, migration order, and activation tests.
 
 ## Branding and Content
 
@@ -66,7 +80,7 @@ The TypeScript contracts are defined in `src/data/types.ts`. The server-status q
 
 ## Validation
 
-The project has been validated with a production build, desktop and mobile route captures, a complete demonstration sign-in, protected-route redirection, and nested portal navigation. Interactive filters, copy controls, registration feedback, membership cadence controls, account-state controls, and session persistence are implemented in the frontend.
+The project has been validated with a production build, strict type checking, linting, the complete OAuth test suite, protected server-route checks, desktop and mobile route captures, and nested portal navigation. Interactive filters, copy controls, registration feedback, membership cadence controls, account-state controls, and revocable session persistence are implemented.
 
 ## References
 

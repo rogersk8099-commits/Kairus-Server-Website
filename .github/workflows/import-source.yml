@@ -1,0 +1,32 @@
+name: Import Kairu SMP source
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  import-source:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download and unpack validated source
+        run: |
+          curl -fL 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663923349545/ptezgXEsnywaBsth.zip' -o /tmp/kairu-source.zip
+          unzip -oq /tmp/kairu-source.zip -d .
+          rm -f /tmp/kairu-source.zip
+
+      - name: Commit imported source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Import completed Kairu SMP website source'
+          git push

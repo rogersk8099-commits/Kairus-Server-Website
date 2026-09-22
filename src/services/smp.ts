@@ -11,6 +11,7 @@ import type {
   Stream,
   World,
 } from "@/data/types";
+import { getPortalAchievements, getPortalOverview } from "@/lib/portal.functions";
 
 const API_BASE_URL = (import.meta.env["VITE_SMP_API_URL"] as string | undefined)?.replace(
   /\/$/,
@@ -74,8 +75,8 @@ type Link = {
   discordUserId: string;
   minecraftUuid: string;
   javaUsername: string;
-  bedrockXuid: string | null;
   linkedAt: string;
+  isPrimary?: boolean;
 };
 type AchievementRecord = {
   id: string;
@@ -196,6 +197,7 @@ function mapProfile(link: Link, minecraft: Snapshot | null): PortalUser {
     email: "Managed by Discord",
     minecraftUuid: link.minecraftUuid,
     rank: minecraft?.rankName ?? "Member",
+    worldName: minecraft?.worldName ?? null,
     tier: minecraft?.rankName ?? "Member",
     joinedAt: new Date(link.linkedAt).toLocaleDateString(),
     discordTag: link.discordUserId,
@@ -212,9 +214,10 @@ function mapStats(s: Snapshot | null): MinecraftStats {
         deaths: s.deaths,
         distanceKm: Math.round(s.distanceMeters / 1_000),
         eventsWon: 0,
+        balance: s.balance,
         weekly: [],
       }
-    : mock.minecraftStats;
+    : { playtimeHours: 0, blocksPlaced: 0, blocksMined: 0, mobKills: 0, deaths: 0, distanceKm: 0, eventsWon: 0, balance: 0, weekly: [] };
 }
 function mapAchievement(a: AchievementRecord): Achievement {
   const pct = a.target > 0 ? Math.round((a.progress / a.target) * 100) : 0;
@@ -287,51 +290,9 @@ export const smpApi = {
       await request<{ tiers: TierRecord[] }>("/api/membership/tiers", { tiers: [] })
     ).tiers.map(mapTier);
   },
-  getAchievements: async (): Promise<Achievement[]> => {
-    if (!API_BASE_URL || !DISCORD_USER_ID) return mock.achievements;
-    const body = await request<{ achievements: AchievementRecord[] }>(
-      "/api/me/achievements",
-      { achievements: [] },
-      true,
-    );
-    return body.achievements.map(mapAchievement);
-  },
-  getPortalUser: async (): Promise<PortalUser> => {
-    if (!API_BASE_URL || !DISCORD_USER_ID) return mock.portalUser;
-    const body = await request<{ profile: Link & { minecraft: Snapshot | null } }>(
-      "/api/me",
-      {
-        profile: {
-          discordUserId: "",
-          minecraftUuid: mock.portalUser.minecraftUuid,
-          javaUsername: mock.portalUser.username,
-          bedrockXuid: null,
-          linkedAt: new Date().toISOString(),
-          minecraft: null,
-        },
-      },
-      true,
-    );
-    return mapProfile(body.profile, body.profile.minecraft);
-  },
-  getMinecraftStats: async (): Promise<MinecraftStats> => {
-    if (!API_BASE_URL || !DISCORD_USER_ID) return mock.minecraftStats;
-    const body = await request<{ link: Link; statistics: Snapshot | null }>(
-      "/api/me/minecraft",
-      {
-        link: {
-          discordUserId: "",
-          minecraftUuid: "",
-          javaUsername: "",
-          bedrockXuid: null,
-          linkedAt: new Date().toISOString(),
-        },
-        statistics: null,
-      },
-      true,
-    );
-    return mapStats(body.statistics);
-  },
+  getAchievements: async (): Promise<Achievement[]> => (await getPortalAchievements()).achievements.map(mapAchievement),
+  getPortalUser: async (): Promise<PortalUser> => { const body = await getPortalOverview(); if (!body.primary) throw new Error("No Minecraft account is linked to this Discord identity"); return mapProfile(body.primary, body.statistics); },
+  getMinecraftStats: async (): Promise<MinecraftStats> => mapStats((await getPortalOverview()).statistics),
 };
 
 export const queries = {

@@ -86,6 +86,7 @@ export type PortalUser = {
   email: string;
   minecraftUuid: string;
   rank: string;
+  worldName: string | null;
   tier: string;
   joinedAt: string;
   discordTag: string | null;
@@ -100,5 +101,6 @@ export type MinecraftStats = {
   deaths: number;
   distanceKm: number;
   eventsWon: number;
+  balance: number;
   weekly: { day: string; hours: number }[];
 };

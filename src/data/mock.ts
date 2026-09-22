@@ -457,6 +457,7 @@ export const portalUser: PortalUser = {
   email: "kaji@kairusmp.gg",
   minecraftUuid: "b9f3-4a21-77de-0c58",
   rank: "Legend",
+  worldName: "Ashfall",
   tier: "Legend",
   joinedAt: "March 2025",
   discordTag: "kajikairu",
@@ -471,6 +472,7 @@ export const minecraftStats: MinecraftStats = {
   deaths: 214,
   distanceKm: 1_842,
   eventsWon: 6,
+  balance: 0,
   weekly: [
     { day: "Mon", hours: 2.4 },
     { day: "Tue", hours: 3.8 },

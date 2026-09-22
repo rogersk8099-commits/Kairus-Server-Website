@@ -25,7 +25,7 @@ function Dashboard() {
   const { data: user } = useSuspenseQuery(queries.portalUser);
 
   const unlocked = achievements.filter((a) => a.unlocked).length;
-  const peak = Math.max(...stats.weekly.map((d) => d.hours));
+  const peak = Math.max(1, ...stats.weekly.map((d) => d.hours));
 
   return (
     <div className="space-y-8">
@@ -39,11 +39,11 @@ function Dashboard() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <StatTile label="Playtime" value={`${stats.playtimeHours}h`} hint="Season 7" />
+        <StatTile label="Playtime" value={`${stats.playtimeHours}h`} hint="Recorded by SMPPlatform" />
         <StatTile label="Achievements" value={`${unlocked}/${achievements.length}`} />
-        <StatTile label="PvP kills" value="3,480" hint="Top 1% this season" />
-        <StatTile label="Balance" value="84.2K" hint="Shards available" />
-        <StatTile label="Current world" value="Ashfall" hint="Survival · EU node" />
+        <StatTile label="Kills" value={stats.mobKills.toLocaleString()} hint="Recorded by SMPPlatform" />
+        <StatTile label="Balance" value={stats.balance.toLocaleString()} hint="Live player snapshot" />
+        <StatTile label="Current world" value={user.worldName ?? "Offline"} hint="Live player snapshot" />
       </div>
 
       <section className="panel rounded-lg p-6">
@@ -55,14 +55,13 @@ function Dashboard() {
             <h2 className="mt-1 text-sm font-bold uppercase tracking-[0.18em]">Linked accounts</h2>
           </div>
           <span className="text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground">
-            3 of 3 connected
+            Discord identity connected
           </span>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
           {[
             ["Discord", `@${user.discordTag}`, "Community roles synced"],
-            ["Minecraft Java", user.username, "Primary game account"],
-            ["Minecraft Bedrock", `${user.username}_BE`, "Crossplay identity"],
+            ["Minecraft", user.username, "Primary linked game account"],
           ].map(([label, value, hint]) => (
             <div key={label} className="border border-border/70 bg-background/45 p-4">
               <div className="flex items-center justify-between gap-3">

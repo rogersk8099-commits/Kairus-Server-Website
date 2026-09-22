@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { queries } from "@/services/smp";
 import { site } from "@/config/site";
@@ -55,8 +55,8 @@ function Toggle({
       >
         <span
           className={cn(
-            "absolute top-0.5 h-4 w-4 rounded-full bg-foreground transition-transform",
-            on ? "translate-x-6" : "translate-x-1",
+            "absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform duration-200",
+            on ? "translate-x-[22px]" : "translate-x-1",
           )}
         />
       </button>
@@ -67,13 +67,29 @@ function Toggle({
 function SettingsPage() {
   const { data: user } = useSuspenseQuery(queries.portalUser);
   const [email, setEmail] = useState(user.email);
-  const [prefs, setPrefs] = useState({
+  const defaultPrefs = {
     eventPings: true,
     streamAlerts: true,
     weeklyRecap: false,
     publicProfile: true,
     showOnLeaderboard: true,
-  });
+  };
+  const [prefs, setPrefs] = useState(defaultPrefs);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(`kairu:portal-preferences:${user.minecraftUuid}`);
+      if (stored) setPrefs({ ...defaultPrefs, ...(JSON.parse(stored) as Partial<typeof defaultPrefs>) });
+    } catch { /* Keep safe defaults when storage is unavailable or malformed. */ }
+    setPrefsLoaded(true);
+  }, [user.minecraftUuid]);
+
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    try { window.localStorage.setItem(`kairu:portal-preferences:${user.minecraftUuid}`, JSON.stringify(prefs)); }
+    catch { /* UI remains usable even when browser storage is disabled. */ }
+  }, [prefs, prefsLoaded, user.minecraftUuid]);
 
   return (
     <div className="space-y-8">

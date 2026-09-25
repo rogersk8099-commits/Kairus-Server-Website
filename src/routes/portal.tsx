@@ -7,6 +7,7 @@ import {
   LogOut,
   MessageSquare,
   Settings,
+  ShieldCheck,
   Swords,
   UserRound,
 } from "lucide-react";
@@ -49,7 +50,7 @@ const links = [
 
 function PortalLayout() {
   const { authenticatedUser } = Route.useRouteContext();
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -80,7 +81,7 @@ function PortalLayout() {
             </div>
           </div>
           <nav className="mt-3 flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-            {links.map((l) => (
+            {[...links, ...(session?.isOwner ? [{ to: "/portal/admin", label: "Owner control", icon: ShieldCheck }] : [])].map((l) => (
               <Link
                 key={l.to}
                 to={l.to}

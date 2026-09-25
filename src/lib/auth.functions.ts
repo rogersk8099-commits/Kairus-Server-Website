@@ -15,8 +15,9 @@ export type PublicSession = {
   username: string;
   expiresAt: string;
   csrfToken: string;
+  isOwner: boolean;
 } | null;
-type CentralSession = { user: AuthUser; expiresAt: string; csrfToken: string };
+type CentralSession = { user: AuthUser; expiresAt: string; csrfToken: string; isOwner: boolean };
 function publicSession(value: CentralSession): NonNullable<PublicSession> {
   return { ...value, username: value.user.displayName };
 }
